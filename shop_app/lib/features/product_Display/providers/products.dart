@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../models/product.dart';
-import '../widgets/product_single_item.dart';
+import './product.dart';
 
-class ProductsOverviewScreen extends StatelessWidget {
-  final List<Product> loadedProducts = [
+class Products with ChangeNotifier {
+  // ignore: prefer_final_fields
+  List<Product> _items = [
     Product(
       id: 'p1',
       title: 'Red Shirt',
@@ -39,27 +39,25 @@ class ProductsOverviewScreen extends StatelessWidget {
     ),
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MyShop'),
-      ),
-      body: SafeArea(
-        child: GridView.builder(
-            padding: const EdgeInsets.all(10),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 3 / 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-            ),
-            itemBuilder: (ctx, index) => ProductSingleItem(
-                id: loadedProducts[index].id,
-                title: loadedProducts[index].title,
-                imageUrl: loadedProducts[index].imageUrl),
-            itemCount: loadedProducts.length),
-      ),
-    );
+  List<Product> get items {
+    return [..._items]; // This will return a copy of our list.
+    // ? Why we want copy and why the list is private
+    //
+    //* The list is private because only the data inside this class should be changed by this class only coz then and only then we will be able to notify our listeners(Look below method) that data has changed please take in new data
+    // * An that is why we are returning a copy, becuase by default dart retutns the reference to that list which is in the memory
+  }
+
+  List<Product> get favoriteItem {
+    return [..._items.where((prodItem) => prodItem.isFavorite)];
+    // return _items.where((prodItem) => prod.isFavorite).toList(); // also correct
+  }
+
+  Product findById(String id) {
+    return _items.firstWhere((prod) => prod.id == id);
+  }
+
+  void addProduct() {
+    // _items.add(value);
+    notifyListeners(); // * This will notify our child listeners about the data changed once we add new product to the list
   }
 }
