@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../widgets/products_grid.dart';
+import '../../cart/widgets/badge.dart';
+import '../../cart/providers/cart.dart';
+import '../../cart/screens/cart_screen.dart';
 
 /// * Because we as developers we want to work with string and computer wants int so 😃
 enum FilterOptions {
@@ -25,23 +29,36 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
         title: const Text('MyShop'),
         actions: [
           PopupMenuButton(
-              onSelected: (selectedValue) {
-                setState(() {
-                  if (selectedValue == FilterOptions.Favorites) {
-                    _showOnlyFavorites = true;
-                  } else {
-                    _showOnlyFavorites = false;
-                  }
-                });
-              },
-              itemBuilder: (_) => [
-                    const PopupMenuItem(
-                        child: Text('Only Favorites'),
-                        value: FilterOptions.Favorites),
-                    const PopupMenuItem(
-                        child: Text('Show all'), value: FilterOptions.All),
-                  ],
-              icon: const Icon(Icons.more_vert))
+            onSelected: (selectedValue) {
+              setState(() {
+                if (selectedValue == FilterOptions.Favorites) {
+                  _showOnlyFavorites = true;
+                } else {
+                  _showOnlyFavorites = false;
+                }
+              });
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                  child: Text('Only Favorites'),
+                  value: FilterOptions.Favorites),
+              const PopupMenuItem(
+                  child: Text('Show all'), value: FilterOptions.All),
+            ],
+            icon: const Icon(Icons.more_vert),
+          ),
+          Consumer<Cart>(
+            /// * Here Badge class was provided by our tutor from Lecture 203
+            builder: (_, cart, ch) => Badge(
+              child: ch
+                  as Widget, // This is will take consumer child which is IconButton
+              value: cart.itemsCount.toString(),
+            ),
+            child: IconButton(
+              onPressed: () => Navigator.of(context).pushNamed(CartScreen.routeName),
+              icon: const Icon(Icons.shopping_cart),
+            ),
+          ),
         ],
       ),
       body: SafeArea(
