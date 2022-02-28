@@ -16,10 +16,17 @@ class Cartitem {
 class Cart with ChangeNotifier {
   Map<String, Cartitem> _items = {};
 
+  /// * Reutns us a copy of our original map
   Map<String, Cartitem> get items {
     return {..._items};
   }
 
+  /// * Returning the values of the map as a list
+  List<Cartitem> get itemsList {
+    return items.values.toList();
+  }
+
+  /// * Returns the total cart count inlcuding the quantity of the item
   int get itemsCount {
     var totalCartCount = 0;
     _items.forEach(((key, value) {
@@ -28,6 +35,7 @@ class Cart with ChangeNotifier {
     return totalCartCount;
   }
 
+  /// * Returns the total cart amount by quantity * price
   double get cartTotalAmount {
     var totalAmount = 0.0;
     _items.forEach((key, value) {
@@ -36,6 +44,12 @@ class Cart with ChangeNotifier {
     return totalAmount;
   }
 
+  /// * Returns the item count, excluding the quantity of the item
+  int get cartItemCount {
+    return _items.length;
+  }
+
+  /// * To add new item to the map
   void addItem(String id, String title, double price) {
     if (_items.containsKey(id)) {
 // Change quantity if product is already there
@@ -57,6 +71,18 @@ class Cart with ChangeNotifier {
               price: price,
               quantity: 1));
     }
+    notifyListeners();
+  }
+
+/// * Removes item from the cart
+  void removeItem(String productId) {
+    _items.remove(productId);
+    notifyListeners();
+  }
+
+/// * Clears item in the cart
+  void clear() {
+    _items = {};
     notifyListeners();
   }
 }
