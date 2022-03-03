@@ -74,13 +74,32 @@ class Cart with ChangeNotifier {
     notifyListeners();
   }
 
-/// * Removes item from the cart
+  /// * Removes item from the cart
   void removeItem(String productId) {
     _items.remove(productId);
     notifyListeners();
   }
 
-/// * Clears item in the cart
+  /// * Removes single quantity from the cart if there is more than 1 used for undo using snackbar
+  void removeSingleItem(String prodId) {
+    if (!_items.containsKey(prodId)) {
+      return;
+    }
+    if (_items[prodId]!.quantity > 1) {
+      _items.update(
+          prodId,
+          (existingCartItem) => Cartitem(
+              id: existingCartItem.id,
+              price: existingCartItem.price,
+              title: existingCartItem.title,
+              quantity: existingCartItem.quantity - 1));
+    } else {
+      _items.remove(prodId);
+    }
+    notifyListeners();
+  }
+
+  /// * Clears item in the cart
   void clear() {
     _items = {};
     notifyListeners();
