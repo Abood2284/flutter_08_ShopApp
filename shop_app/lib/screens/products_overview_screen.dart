@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/products_grid.dart';
-import '../../cart/widgets/badge.dart';
-import '../../cart/providers/cart.dart';
-import '../../cart/screens/cart_screen.dart';
-import '../../order/widgets/drawer.dart';
+import '../widgets/badge.dart';
+import '../providers/cart.dart';
+import '../screens/cart_screen.dart';
+import '../widgets/drawer.dart';
 
 /// * Because we as developers we want to work with string and computer wants int so 😃
 enum FilterOptions {
