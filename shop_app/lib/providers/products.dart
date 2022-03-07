@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import './product.dart';
+import '../model/product.dart';
 
 class Products with ChangeNotifier {
   // ignore: prefer_final_fields

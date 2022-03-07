@@ -7,6 +7,7 @@ import '../providers/order_provider.dart';
 
 class CartScreen extends StatelessWidget {
   static const routeName = 'cart-screen';
+
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<Cart>(context);
@@ -21,10 +22,10 @@ class CartScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                 const Text(
                   'Total',
                   style: TextStyle(fontSize: 20),
-                ),
+                ),  
                 Chip(
                   label: Text(
                     '\$${cart.cartTotalAmount}',
@@ -32,8 +33,7 @@ class CartScreen extends StatelessWidget {
                   ),
                   backgroundColor: Colors.white,
                 ),
-                // ignore: deprecated_member_use
-                FlatButton(
+                ElevatedButton(
                     onPressed: () {
                       Provider.of<Orders>(context, listen: false)
                           .addItem(cart.itemsList, cart.cartTotalAmount);
