@@ -26,13 +26,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
   /// (Can only be used if you are using the controller approach, though here we dont neeed controller as in FLutter 2 onChanged method was added which stored every change and reflect it the same time)
   final _imageUrlFocus = FocusNode();
 
-  /// * This is an Empty string that will store the value of the URl,
-  var _imageUrl = '';
   // This key is used so that form widget state can be accesed from outside the build
   // Its a generic type so we can say what type of data we are expecting
   final _saveFormKey = GlobalKey<FormState>();
 
-  // late Product _editedProduct;
+  // This is the empty product object we will use, since we added copyWith method in our privider class we can replace this product values with new one without creating new objects.
+  // This object will be saved when saveForm is called
   var _editedProduct = Product(
     id: DateTime.now().toString(),
     title: '',
@@ -41,6 +40,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     imageUrl: '',
   );
   // This will be the _initValues for all the text fields that is empty string, if we have product then we replace this map with filled values in didChangeDependencies
+  // else we use the empty values
   var _initValues = {
     'title': '',
     'price': '',
@@ -61,6 +61,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         //  with that we get our product we are looking for
         _editedProduct =
             Provider.of<Products>(context, listen: false).findById(productId);
+            // Now replace the empty strings on the text field with Prodcut values
         _initValues = {
           'title': _editedProduct.title,
           'price': _editedProduct.price
@@ -68,11 +69,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
           'description': _editedProduct.description,
           'imageUrl': _editedProduct.imageUrl,
         };
-        // This variable is for the container to preview the image, if this image has a link container will preview it otherwise it is initialValue is empty String
-        // Here it does the job of strorin incoming url values
-          _imageUrl = _editedProduct.imageUrl;
-
-        
+        // Now if we came here using the add button above code will not run as it will not find the product id, and initialValue map will have empty strings now which can be assigned to textfields
       }
     }
     _intiRun = false;
@@ -136,6 +133,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // logger.d(_initValues['imageUrl']);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Products'),
@@ -152,6 +150,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   decoration: const InputDecoration(labelText: 'Title'),
                   textInputAction: TextInputAction.next,
                   validator: (value) {
+                    // value refers to String on the field, provided by flutter
                     if (value!.isEmpty) {
                       return 'Please Provide a title';
                     }
@@ -249,11 +248,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         border: Border.all(width: 2, color: Colors.grey),
                       ),
                       // If url is empty show text else the image
-                      child: _imageUrl.isEmpty
+                      child: _initValues['imageUrl']!.isEmpty
                           ? const Text('Enter Url')
                           : FittedBox(
-                              child:
-                                  Image.network(_imageUrl, fit: BoxFit.cover),
+                              child: Image.network(
+                                  _initValues['imageUrl'] as String,
+                                  fit: BoxFit.cover),
                             ),
                     ),
                     // ! Wrapped in expanded becoz TextFormField takes infinite widht and with row = error
@@ -268,16 +268,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           validator: (value) {
                             _imageValidator(value!);
                           },
-                          onFieldSubmitted: (_) {
-                            _saveForm();
-                          },
 
                           /// * So that we load the updated image entered by the user
                           ///
                           /// Will run on every change you made so you without pressing done users gets the preview and thats a good user Experience.
                           onChanged: (value) {
                             setState(() {
-                              _imageUrl = value;
+                              _initValues['imageUrl'] = value;
                             });
                           },
                           onSaved: (value) {
