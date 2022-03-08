@@ -276,6 +276,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           ///
                           /// Will run on every change you made so you without pressing done users gets the preview and thats a good user Experience.
                           onChanged: (value) {
+                            _initValues['imageUrl']
                             setState(() {
                               _imageUrl = value;
                             });
