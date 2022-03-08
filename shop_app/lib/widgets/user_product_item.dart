@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../screens/edit_product_screen.dart';
+
 class UserProductItem extends StatelessWidget {
+  final String id;
   final String title;
   final String image;
 
-  UserProductItem(this.title, this.image);
+  UserProductItem(this.id, this.title, this.image);
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +16,7 @@ class UserProductItem extends StatelessWidget {
       leading: CircleAvatar(
         backgroundImage: NetworkImage(image),
       ),
+
       /// ! Because row takes infinite Wdith and trailing dont stop it resulting in out of the box render so to stop added a fixed width.
       trailing: Container(
         width: 100,
@@ -25,6 +29,8 @@ class UserProductItem extends StatelessWidget {
               ),
               onPressed: () {
                 //..Edit the product
+                Navigator.of(context)
+                    .pushNamed(EditProductScreen.routeName, arguments: id);
               },
             ),
             IconButton(

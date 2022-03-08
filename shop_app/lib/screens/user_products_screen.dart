@@ -29,7 +29,7 @@ class UserProductScreen extends StatelessWidget {
           itemCount: productsData.items.length,
           itemBuilder: (_, i) => Column(
             children: [
-              UserProductItem(
+              UserProductItem(productsData.items[i].id!,
                   productsData.items[i].title, productsData.items[i].imageUrl),
               const Divider(),
             ],

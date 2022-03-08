@@ -56,8 +56,8 @@ class Products with ChangeNotifier {
     return _items.firstWhere((prod) => prod.id == id);
   }
 
-  void addProduct() {
-    // _items.add(value);
+  void addProduct(Product product) {
+    _items.insert(0, product); // at the beginning of the list
     notifyListeners(); // * This will notify our child listeners about the data changed once we add new product to the list
   }
 }

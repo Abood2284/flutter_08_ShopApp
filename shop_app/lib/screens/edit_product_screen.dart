@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:logger/logger.dart';
 
 import '../model/product.dart';
+import '../providers/products.dart';
+import '../constants.dart';
 
 class EditProductScreen extends StatefulWidget {
   static const routeName = 'edit-product-screen';
@@ -20,7 +24,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   ///
   /// Also i need to check if the focus is on the field or not so to check this the place will be initState
   /// (Can only be used if you are using the controller approach, though here we dont neeed controller as in FLutter 2 onChanged method was added which stored every change and reflect it the same time)
-  // final _imageURL = FocusNode();
+  final _imageUrlFocus = FocusNode();
 
   /// * This is an Empty string that will store the value of the URl,
   var _imageUrl = '';
@@ -30,12 +34,49 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   // late Product _editedProduct;
   var _editedProduct = Product(
-    id: null,
+    id: DateTime.now().toString(),
     title: '',
     price: 0.0,
     description: '',
     imageUrl: '',
   );
+  // This will be the _initValues for all the text fields that is empty string, if we have product then we replace this map with filled values in didChangeDependencies
+  var _initValues = {
+    'title': '',
+    'price': '',
+    'description': '',
+    'imageUrl': '',
+  };
+  // now didChangeDependencies are executed several times while the screen is open,
+  // so to run this once we will create a bool
+  var _intiRun = true;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_intiRun) {
+      // Added ? can be null operator becoz if we press add icon this will still run without args -> error saying Null cannot by SubType of string
+      var productId = ModalRoute.of(context)!.settings.arguments as String?;
+      // As i said earlier this method runs several times when the page is open, and this page will also open if i press the add product button. though we are not pasing there arguments hence this might throw an error, so we want to continue if we have a product
+      if (productId != null) {
+        //  with that we get our product we are looking for
+        _editedProduct =
+            Provider.of<Products>(context, listen: false).findById(productId);
+        _initValues = {
+          'title': _editedProduct.title,
+          'price': _editedProduct.price
+              .toString(), // Because TexField takes String only, we have to parsse it int later or double
+          'description': _editedProduct.description,
+          'imageUrl': _editedProduct.imageUrl,
+        };
+        // This variable is for the container to preview the image, if this image has a link container will preview it otherwise it is initialValue is empty String
+        // Here it does the job of strorin incoming url values
+          _imageUrl = _editedProduct.imageUrl;
+
+        
+      }
+    }
+    _intiRun = false;
+  }
 
   /// * Always dispose your FocusNode to stop memeory Leak
   @override
@@ -59,13 +100,38 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (!validationResult) {
       return; // ! Below code will not run if this validationResult == false
     }
-    // * Save() will trigger method one every field of form which allows you take the value entered in it and do whatever you want(i.e: store it into a global map that stores all the text inputs)
+    // * Save() will trigger onSave method one every field of form which allows you take the value entered in it and do whatever you want(i.e: store it into a global map that stores all the text inputs)
     // However here we are going to create a mutable method for products so that we can edit it for every field we have. for tht first add the onSaved: on all fields
     _saveFormKey.currentState!.save();
-    print(_editedProduct.title);
-    print(_editedProduct.price);
-    print(_editedProduct.description);
-    print(_editedProduct.imageUrl);
+    // Once the form is saved now pass the object to add new product to list
+    // Also setting listen to false because dont want to listen to actions i just want to dispatch and action.
+    Provider.of<Products>(context, listen: false).addProduct(_editedProduct);
+    // After saving i want to pop the screen
+    Navigator.of(context).pop();
+  }
+
+  /// * Instead of using this you can also use the normal Expression like string.endsWith(http) or not ends with jpg or not
+  /// This Regx was copied from google from my flutter course, you dont need to learn this, it was specially used in javaScript
+  /// for complex sorting
+  ///
+  /// Read about Regx -> https://api.dart.dev/stable/2.13.4/dart-core/RegExp-class.html
+  String? _imageValidator(String value) {
+    const urlPattern =
+        r"(https?|ftp)://([-A-Z0-9.]+)(/[-A-Z0-9+&@#/%=~_|!:,.;]*)?(\?[A-Z0-9+&@#/%=~_|!:‌​,.;]*)?";
+    final result = RegExp(urlPattern, caseSensitive: false).firstMatch(value);
+
+    if (result == null) {
+      return 'Please enter a valid URL.';
+    }
+
+    final String smallCaps = value.toLowerCase();
+    final bool isAllowedExtension = smallCaps.endsWith('.png') ||
+        smallCaps.endsWith('.jpg') ||
+        smallCaps.endsWith('.jpeg');
+    if (!isAllowedExtension) {
+      return 'Please enter an image URL (png or jpg)';
+    }
+    return null;
   }
 
   @override
@@ -82,12 +148,20 @@ class _EditProductScreenState extends State<EditProductScreen> {
             child: Column(
               children: [
                 TextFormField(
+                  initialValue: _initValues['title'],
                   decoration: const InputDecoration(labelText: 'Title'),
                   textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Please Provide a title';
+                    }
+                    return null;
+                  },
                   onFieldSubmitted: (_) {
                     // Change the mouse focus to next FocusNode
                     FocusScope.of(context).requestFocus(_priceNode);
                   },
+                  // This is triggred from up the widget tree where .save is called on form key
                   onSaved: (value) {
                     /* There are many ways to do this
                     
@@ -113,18 +187,26 @@ class _EditProductScreenState extends State<EditProductScreen> {
                      */
                     _editedProduct = _editedProduct.copyWith(title: value);
                   },
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Please Provide a title';
-                    }
-                    return null;
-                  },
                 ),
                 TextFormField(
+                  initialValue: _initValues['price'],
                   decoration: const InputDecoration(labelText: 'Price'),
                   textInputAction: TextInputAction.next,
                   keyboardType: TextInputType.number,
                   focusNode: _priceNode,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Please enter the price';
+                    }
+                    // .tryParse returns null if it faces a non valid number
+                    if (double.tryParse(value) == null) {
+                      return 'Please enter a valid number';
+                    }
+                    if (double.parse(value) <= 0) {
+                      return 'Please enter the price greater than 0';
+                    }
+                    return null;
+                  },
                   onFieldSubmitted: (_) {
                     // Change the mouse focus to next FocusNode
                     FocusScope.of(context).requestFocus(_descriptionNode);
@@ -135,10 +217,20 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   },
                 ),
                 TextFormField(
+                    initialValue: _initValues['description'],
                     decoration: const InputDecoration(labelText: 'Description'),
                     maxLines: 3,
                     keyboardType: TextInputType.multiline,
                     focusNode: _descriptionNode,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter a description';
+                      }
+                      if (value.length < 10) {
+                        return 'Should be atleast 10 characters long';
+                      }
+                      return null;
+                    },
                     onSaved: (value) {
                       _editedProduct =
                           _editedProduct.copyWith(description: value);
@@ -167,10 +259,19 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     // ! Wrapped in expanded becoz TextFormField takes infinite widht and with row = error
                     Expanded(
                       child: TextFormField(
+                          initialValue: _initValues['imageUrl'],
                           decoration:
                               const InputDecoration(labelText: 'Image URL'),
                           keyboardType: TextInputType.url,
-                          // focusNode: _imageURL,
+                          textInputAction: TextInputAction.done,
+                          focusNode: _imageUrlFocus,
+                          validator: (value) {
+                            _imageValidator(value!);
+                          },
+                          onFieldSubmitted: (_) {
+                            _saveForm();
+                          },
+
                           /// * So that we load the updated image entered by the user
                           ///
                           /// Will run on every change you made so you without pressing done users gets the preview and thats a good user Experience.
