@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../model/product.dart';
+import '../constants.dart';
 
 class Products with ChangeNotifier {
   // ignore: prefer_final_fields
@@ -59,5 +60,17 @@ class Products with ChangeNotifier {
   void addProduct(Product product) {
     _items.insert(0, product); // at the beginning of the list
     notifyListeners(); // * This will notify our child listeners about the data changed once we add new product to the list
+  }
+
+  void updateProduct(String id, Product newProduct) {
+    /// Return the index where the first cond. is met
+    final productIndex = _items.indexWhere((prod) => prod.id == id);
+    _items[productIndex] = newProduct;
+    notifyListeners();
+  }
+
+  void deleteItem(String id) {
+    _items.removeWhere((element) => element.id == id);
+    notifyListeners();
   }
 }

@@ -32,8 +32,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   // This is the empty product object we will use, since we added copyWith method in our privider class we can replace this product values with new one without creating new objects.
   // This object will be saved when saveForm is called
-  var _editedProduct = Product(
-    id: DateTime.now().toString(),
+  Product _editedProduct = Product(
+    // id: DateTime.now().toString(),
+    id: null,
     title: '',
     price: 0.0,
     description: '',
@@ -55,13 +56,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
     super.didChangeDependencies();
     if (_intiRun) {
       // Added ? can be null operator becoz if we press add icon this will still run without args -> error saying Null cannot by SubType of string
-      var productId = ModalRoute.of(context)!.settings.arguments as String?;
+      Product? product = ModalRoute.of(context)!.settings.arguments as Product?;
       // As i said earlier this method runs several times when the page is open, and this page will also open if i press the add product button. though we are not pasing there arguments hence this might throw an error, so we want to continue if we have a product
-      if (productId != null) {
+      // * As for now all our new products have a id of null, so if the id is not null that means the product must be updated not added.
+      if (product?.id != null) {
+        logger.d(
+            'I am in didChangeDependencies if block which i only suppose to run when editing products');
         //  with that we get our product we are looking for
-        _editedProduct =
-            Provider.of<Products>(context, listen: false).findById(productId);
-            // Now replace the empty strings on the text field with Prodcut values
+        _editedProduct = product!;
+        // Now replace the empty strings on the text field with Prodcut values
         _initValues = {
           'title': _editedProduct.title,
           'price': _editedProduct.price
@@ -100,9 +103,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
     // * Save() will trigger onSave method one every field of form which allows you take the value entered in it and do whatever you want(i.e: store it into a global map that stores all the text inputs)
     // However here we are going to create a mutable method for products so that we can edit it for every field we have. for tht first add the onSaved: on all fields
     _saveFormKey.currentState!.save();
-    // Once the form is saved now pass the object to add new product to list
-    // Also setting listen to false because dont want to listen to actions i just want to dispatch and action.
-    Provider.of<Products>(context, listen: false).addProduct(_editedProduct);
+    if (_editedProduct.id != null) {
+      logger.d('I am In if block of update product');
+      Provider.of<Products>(context, listen: false)
+          .updateProduct(_editedProduct.id!, _editedProduct);
+    } else {
+      logger.d('I am In else block of add product');
+      // After saving i want to pop the screen)
+      // Once the form is saved now pass the object to add new product to list
+      // Also setting listen to false because dont want to listen to actions i just want to dispatch and action.
+      Provider.of<Products>(context, listen: false).addProduct(_editedProduct);
+    }
     // After saving i want to pop the screen
     Navigator.of(context).pop();
   }

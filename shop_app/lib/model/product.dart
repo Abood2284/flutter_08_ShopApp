@@ -31,7 +31,7 @@ class Product with ChangeNotifier {
     bool? isFavorite,
   }) {
     return Product(
-      id: id = null ?? this.id,
+      id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
       price: price ?? this.price,
