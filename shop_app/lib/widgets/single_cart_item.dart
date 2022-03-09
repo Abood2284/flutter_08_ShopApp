@@ -27,6 +27,8 @@ class SingleCartItem extends StatelessWidget {
       onDismissed: (dismiss) {
         Provider.of<Cart>(context, listen: false).removeItem(productId);
       },
+      // confirmDismiss returns a Future bool, where true means yes dismiss it false means no.
+      // Future is called when pop up is closed so it needs the value bool so we call Future using Navigator.pop this triggers the Dialog to close resulting in Future to be called hence future is waiting for a bool we pass the bool in the Navigator
       confirmDismiss: (direction) {
         return showDialog(
           context: context,

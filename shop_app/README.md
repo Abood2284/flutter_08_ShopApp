@@ -1,16 +1,16 @@
 # shop_app
 
-A new Flutter project.
+## Sections covered in this app 8, 9, 10, 11, 12
+# SECTION - 8 - STATE MANAGEMENT
+- I learned about all the types of state management when to use stateless and ful widgets
+- What is providers how to configure a provider
 
-## Getting Started
+# SECTION - 9 - USER INPUTS & FORMS
+## Forms
+- How to create and collect data from forms
+## Dialog
+- I also learned how to pop a AlertDialog, used in widgets/single_cart_item.dart
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Business Logic
+- How to add, delete & update a product from inside the app using User inputs
+- I have to say it was quite a burnout learning grasping this logic but yes i managed to learn and create on my own
