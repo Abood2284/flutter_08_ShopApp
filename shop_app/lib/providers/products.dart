@@ -1,4 +1,7 @@
+import 'dart:convert'; // to convert dart code to json
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../model/product.dart';
 import '../constants.dart';
@@ -58,7 +61,31 @@ class Products with ChangeNotifier {
   }
 
   void addProduct(Product product) {
-    _items.insert(0, product); // at the beginning of the list
+    /// sTORING OUR FIREBASE URL IN A VARIABLE THIS WILL BE CONVERTED TO QUERY BY FLUTTER.
+    /// In fireBase url you can create folders by adding /folder-name.json as this will be converted to quert which will execute and create a folder if not there already-> here products.json folder is created inside that we post
+    final url = Uri.parse(
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products.json');
+    /// we imported our http.dart as http
+    /// .post takes in url where you want to post and some named args,
+    /// body defines how and what your db should have.
+    /// as body and everything on backend works on json so we import dart:converter to import our dart to json.
+    /// As you know Js more works with maps some key and value that is why we tried to pass maps which suited us, though body takes dynamic value
+    http.post(url,
+        body: json.encode({
+          'title': product.title,
+          'description': product.description,
+          'price': product.price,
+          'imageUrl': product.imageUrl,
+          'isFavorite': product.isFavorite,
+        }));
+    final newProduct = Product(
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      id: DateTime.now().toString(),
+    );
+    _items.add(newProduct);
     notifyListeners(); // * This will notify our child listeners about the data changed once we add new product to the list
   }
 
