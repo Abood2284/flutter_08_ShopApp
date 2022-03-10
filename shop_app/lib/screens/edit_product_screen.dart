@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:logger/logger.dart';
 
 import '../model/product.dart';
 import '../providers/products.dart';
@@ -33,8 +32,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   // This is the empty product object we will use, since we added copyWith method in our privider class we can replace this product values with new one without creating new objects.
   // This object will be saved when saveForm is called
   Product _editedProduct = Product(
-    // id: DateTime.now().toString(),
-    id: null,
+    id: null, // Dont worry id is never null in products.dart we replace null with firebase generated id, though we re-create another instance of Product not the best approach but it works
     title: '',
     price: 0.0,
     description: '',
@@ -51,6 +49,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
   // now didChangeDependencies are executed several times while the screen is open,
   // so to run this once we will create a bool
   var _intiRun = true;
+  var _isLoading =
+      false; // To run ternary expression of whether to show loading spinner ot not
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -60,8 +60,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
       // As i said earlier this method runs several times when the page is open, and this page will also open if i press the add product button. though we are not pasing there arguments hence this might throw an error, so we want to continue if we have a product
       // * As for now all our new products have a id of null, so if the id is not null that means the product must be updated not added.
       if (product?.id != null) {
-        logger.d(
-            'I am in didChangeDependencies if block which i only suppose to run when editing products');
         //  with that we get our product we are looking for
         _editedProduct = product!;
         // Now replace the empty strings on the text field with Prodcut values
@@ -103,19 +101,48 @@ class _EditProductScreenState extends State<EditProductScreen> {
     // * Save() will trigger onSave method one every field of form which allows you take the value entered in it and do whatever you want(i.e: store it into a global map that stores all the text inputs)
     // However here we are going to create a mutable method for products so that we can edit it for every field we have. for tht first add the onSaved: on all fields
     _saveFormKey.currentState!.save();
+    // I want to show the spinner once we save it
+    setState(() {
+      _isLoading = true;
+    });
     if (_editedProduct.id != null) {
-      logger.d('I am In if block of update product');
       Provider.of<Products>(context, listen: false)
           .updateProduct(_editedProduct.id!, _editedProduct);
+      Navigator.of(context).pop();
+      // setting spinner back to false once use done
+      setState(() {
+        _isLoading = false;
+      });
     } else {
-      logger.d('I am In else block of add product');
       // After saving i want to pop the screen)
       // Once the form is saved now pass the object to add new product to list
       // Also setting listen to false because dont want to listen to actions i just want to dispatch and action.
-      Provider.of<Products>(context, listen: false).addProduct(_editedProduct);
+      Provider.of<Products>(context, listen: false)
+          .addProduct(_editedProduct)
+          .catchError((error) {
+        // Tecnically catchError & showDialog returns a future
+        // also we want to run setState and pop which is in .then future.
+        // Now catchError returns a future so that make sures that .then will run as soon as catchError is done his part to make him done and return to .then you need to add return before showDialog
+        return showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+                  title: const Text('An error occurred!'),
+                  content: const Text('Something went wrong'),
+                  actions: [
+                    ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Okay'))
+                  ],
+                ));
+      }).then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+        Navigator.of(context).pop();
+      });
     }
-    // After saving i want to pop the screen
-    Navigator.of(context).pop();
   }
 
   /// * Instead of using this you can also use the normal Expression like string.endsWith(http) or not ends with jpg or not
@@ -144,36 +171,39 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // logger.d(_initValues['imageUrl']);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Products'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(17.0),
-        child: Form(
-          key: _saveFormKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextFormField(
-                  initialValue: _initValues['title'],
-                  decoration: const InputDecoration(labelText: 'Title'),
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    // value refers to String on the field, provided by flutter
-                    if (value!.isEmpty) {
-                      return 'Please Provide a title';
-                    }
-                    return null;
-                  },
-                  onFieldSubmitted: (_) {
-                    // Change the mouse focus to next FocusNode
-                    FocusScope.of(context).requestFocus(_priceNode);
-                  },
-                  // This is triggred from up the widget tree where .save is called on form key
-                  onSaved: (value) {
-                    /* There are many ways to do this
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(17.0),
+              child: Form(
+                key: _saveFormKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        initialValue: _initValues['title'],
+                        decoration: const InputDecoration(labelText: 'Title'),
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          // value refers to String on the field, provided by flutter
+                          if (value!.isEmpty) {
+                            return 'Please Provide a title';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (_) {
+                          // Change the mouse focus to next FocusNode
+                          FocusScope.of(context).requestFocus(_priceNode);
+                        },
+                        // This is triggred from up the widget tree where .save is called on form key
+                        onSaved: (value) {
+                          /* There are many ways to do this
                     
                      2: you can also create local variables
                     
@@ -195,120 +225,122 @@ class _EditProductScreenState extends State<EditProductScreen> {
                        );
                      },
                      */
-                    _editedProduct = _editedProduct.copyWith(title: value);
-                  },
-                ),
-                TextFormField(
-                  initialValue: _initValues['price'],
-                  decoration: const InputDecoration(labelText: 'Price'),
-                  textInputAction: TextInputAction.next,
-                  keyboardType: TextInputType.number,
-                  focusNode: _priceNode,
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Please enter the price';
-                    }
-                    // .tryParse returns null if it faces a non valid number
-                    if (double.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    if (double.parse(value) <= 0) {
-                      return 'Please enter the price greater than 0';
-                    }
-                    return null;
-                  },
-                  onFieldSubmitted: (_) {
-                    // Change the mouse focus to next FocusNode
-                    FocusScope.of(context).requestFocus(_descriptionNode);
-                  },
-                  onSaved: (value) {
-                    _editedProduct =
-                        _editedProduct.copyWith(price: double.parse(value!));
-                  },
-                ),
-                TextFormField(
-                    initialValue: _initValues['description'],
-                    decoration: const InputDecoration(labelText: 'Description'),
-                    maxLines: 3,
-                    keyboardType: TextInputType.multiline,
-                    focusNode: _descriptionNode,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return 'Please enter a description';
-                      }
-                      if (value.length < 10) {
-                        return 'Should be atleast 10 characters long';
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      _editedProduct =
-                          _editedProduct.copyWith(description: value);
-                    }),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      margin: const EdgeInsets.only(
-                        top: 10,
-                        right: 13,
+                          _editedProduct =
+                              _editedProduct.copyWith(title: value);
+                        },
                       ),
-                      decoration: BoxDecoration(
-                        border: Border.all(width: 2, color: Colors.grey),
+                      TextFormField(
+                        initialValue: _initValues['price'],
+                        decoration: const InputDecoration(labelText: 'Price'),
+                        textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.number,
+                        focusNode: _priceNode,
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return 'Please enter the price';
+                          }
+                          // .tryParse returns null if it faces a non valid number
+                          if (double.tryParse(value) == null) {
+                            return 'Please enter a valid number';
+                          }
+                          if (double.parse(value) <= 0) {
+                            return 'Please enter the price greater than 0';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (_) {
+                          // Change the mouse focus to next FocusNode
+                          FocusScope.of(context).requestFocus(_descriptionNode);
+                        },
+                        onSaved: (value) {
+                          _editedProduct = _editedProduct.copyWith(
+                              price: double.parse(value!));
+                        },
                       ),
-                      // If url is empty show text else the image
-                      child: _initValues['imageUrl']!.isEmpty
-                          ? const Text('Enter Url')
-                          : FittedBox(
-                              child: Image.network(
-                                  _initValues['imageUrl'] as String,
-                                  fit: BoxFit.cover),
-                            ),
-                    ),
-                    // ! Wrapped in expanded becoz TextFormField takes infinite widht and with row = error
-                    Expanded(
-                      child: TextFormField(
-                          initialValue: _initValues['imageUrl'],
+                      TextFormField(
+                          initialValue: _initValues['description'],
                           decoration:
-                              const InputDecoration(labelText: 'Image URL'),
-                          keyboardType: TextInputType.url,
-                          textInputAction: TextInputAction.done,
-                          focusNode: _imageUrlFocus,
+                              const InputDecoration(labelText: 'Description'),
+                          maxLines: 3,
+                          keyboardType: TextInputType.multiline,
+                          focusNode: _descriptionNode,
                           validator: (value) {
-                            _imageValidator(value!);
-                          },
-
-                          /// * So that we load the updated image entered by the user
-                          ///
-                          /// Will run on every change you made so you without pressing done users gets the preview and thats a good user Experience.
-                          onChanged: (value) {
-                            setState(() {
-                              _initValues['imageUrl'] = value;
-                            });
+                            if (value!.isEmpty) {
+                              return 'Please enter a description';
+                            }
+                            if (value.length < 10) {
+                              return 'Should be atleast 10 characters long';
+                            }
+                            return null;
                           },
                           onSaved: (value) {
                             _editedProduct =
-                                _editedProduct.copyWith(imageUrl: value);
+                                _editedProduct.copyWith(description: value);
                           }),
-                    ),
-                  ],
-                ),
-                Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  padding: const EdgeInsets.only(top: 10),
-                  alignment: Alignment.bottomRight,
-                  child: ElevatedButton(
-                    onPressed: _saveForm,
-                    child: const Text('Save'),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            margin: const EdgeInsets.only(
+                              top: 10,
+                              right: 13,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(width: 2, color: Colors.grey),
+                            ),
+                            // If url is empty show text else the image
+                            child: _initValues['imageUrl']!.isEmpty
+                                ? const Text('Enter Url')
+                                : FittedBox(
+                                    child: Image.network(
+                                        _initValues['imageUrl'] as String,
+                                        fit: BoxFit.cover),
+                                  ),
+                          ),
+                          // ! Wrapped in expanded becoz TextFormField takes infinite widht and with row = error
+                          Expanded(
+                            child: TextFormField(
+                                initialValue: _initValues['imageUrl'],
+                                decoration: const InputDecoration(
+                                    labelText: 'Image URL'),
+                                keyboardType: TextInputType.url,
+                                textInputAction: TextInputAction.done,
+                                focusNode: _imageUrlFocus,
+                                validator: (value) {
+                                  _imageValidator(value!);
+                                },
+
+                                /// * So that we load the updated image entered by the user
+                                ///
+                                /// Will run on every change you made so you without pressing done users gets the preview and thats a good user Experience.
+                                onChanged: (value) {
+                                  setState(() {
+                                    _initValues['imageUrl'] = value;
+                                  });
+                                },
+                                onSaved: (value) {
+                                  _editedProduct =
+                                      _editedProduct.copyWith(imageUrl: value);
+                                }),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.only(top: 10),
+                        alignment: Alignment.bottomRight,
+                        child: ElevatedButton(
+                          onPressed: _saveForm,
+                          child: const Text('Save'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }
