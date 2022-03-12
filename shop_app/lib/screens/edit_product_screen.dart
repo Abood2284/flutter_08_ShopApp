@@ -88,7 +88,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   ///
   /// Now to get access to form WIdget from inside class we need to use {GLOBAL KEY}
   /// after creating a final global key then add it to your form, then you can use it here
-  void _saveForm() {
+  Future<void> _saveForm() async {
     /// * And this will activate all the Validators of the fields... though you could also add autoValidation =true which will validate on every key stroke,
     ///
     /// Here is another thing validate() returns true if all the validators returned null, if any one of the validator return a String/error it validate will return false
@@ -106,24 +106,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
       _isLoading = true;
     });
     if (_editedProduct.id != null) {
-      Provider.of<Products>(context, listen: false)
+     await Provider.of<Products>(context, listen: false)
           .updateProduct(_editedProduct.id!, _editedProduct);
-      Navigator.of(context).pop();
-      // setting spinner back to false once use done
-      setState(() {
-        _isLoading = false;
-      });
     } else {
-      // After saving i want to pop the screen)
-      // Once the form is saved now pass the object to add new product to list
-      // Also setting listen to false because dont want to listen to actions i just want to dispatch and action.
-      Provider.of<Products>(context, listen: false)
-          .addProduct(_editedProduct)
-          .catchError((error) {
-        // Tecnically catchError & showDialog returns a future
-        // also we want to run setState and pop which is in .then future.
-        // Now catchError returns a future so that make sures that .then will run as soon as catchError is done his part to make him done and return to .then you need to add return before showDialog
-        return showDialog(
+      // This throws a error thrown from products.dart if .post doesnt returns a response
+      try {
+        await Provider.of<Products>(context, listen: false)
+            .addProduct(_editedProduct);
+      } catch (error) {
+        await showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
                   title: const Text('An error occurred!'),
@@ -136,13 +127,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         child: const Text('Okay'))
                   ],
                 ));
-      }).then((_) {
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.of(context).pop();
-      });
+      }
     }
+    Navigator.of(context).pop();
+    // setting spinner back to false once use done
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   /// * Instead of using this you can also use the normal Expression like string.endsWith(http) or not ends with jpg or not

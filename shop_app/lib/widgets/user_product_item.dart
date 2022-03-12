@@ -12,6 +12,8 @@ class UserProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffold = ScaffoldMessenger.of(
+        context); // Becuase context will not be availble in async method as build will be running and flutter will not be able to indentify which context you want this or previous one
     return ListTile(
       title: Text(product.title),
       leading: CircleAvatar(
@@ -35,9 +37,22 @@ class UserProductItem extends StatelessWidget {
               },
             ),
             IconButton(
-              onPressed: () {
+              onPressed: () async {
                 //..Delete the product
-                Provider.of<Products>(context, listen: false).deleteItem(product.id!);
+                try {
+                  /// Wait for .delete to be finished as its method return Future and throws error if it throws error the below catch block will handle it
+                  await Provider.of<Products>(context, listen: false)
+                      .deleteItem(product.id!);
+                } catch (error) {
+                  scaffold.showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Deleting failed!',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
               },
               icon: Icon(Icons.delete, color: Theme.of(context).errorColor),
             ),
