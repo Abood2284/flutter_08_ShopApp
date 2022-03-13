@@ -116,6 +116,9 @@ class Products with ChangeNotifier {
       // logger.d(json.decode(response.body));
       final extractedData = json.decode(response.body) as Map<String,
           dynamic>; // how i know? you can use logger to first print the decoded json value there you will see key as id and value is another map having key descrotion, title and value thier value which i added
+          if(extractedData == null) {
+            return;
+          }
       final List<Product> _loadedItems =
           []; // Creating empty list that will store loaded product and replace the original list with this later
 
@@ -200,6 +203,7 @@ class Products with ChangeNotifier {
     _items.removeWhere((element) => element.id == id);
     notifyListeners();
     final response = await http.delete(url);
+    // only get & post returns error reponse. for patch, update, delete you need to set your own response code error condition since we are familiair that status code above 400 is error
     if (response.statusCode >= 400) {
       _items.insert(existingProductIndex, existingProduct);
       notifyListeners();

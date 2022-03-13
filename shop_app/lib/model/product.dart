@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class Product with ChangeNotifier {
   final String? id;
@@ -17,9 +20,29 @@ class Product with ChangeNotifier {
       required this.imageUrl,
       this.isFavorite = false});
 
-  void toggleFavorite() {
+/// To avoid code duplication in [toggleFavorite] method
+  void _toggleFav(newStatus) {
+    isFavorite = newStatus;
+    notifyListeners();
+  }
+
+  Future<void> toggleFavorite() async {
+    final oldStatus = isFavorite;
     isFavorite = !isFavorite;
     notifyListeners();
+    final url = Uri.parse(
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products/$id.json');
+    try {
+      final response = await http.patch(url,
+          body: json.encode({
+            'isFavorite': isFavorite,
+          }));
+      if (response.statusCode >= 400) {
+        _toggleFav(oldStatus);
+      }
+    } catch (e) {
+      _toggleFav(oldStatus);
+    }
   }
 
   Product copyWith({
@@ -39,7 +62,4 @@ class Product with ChangeNotifier {
       isFavorite: isFavorite ?? this.isFavorite,
     );
   }
-
 }
-
-

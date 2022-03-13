@@ -22,10 +22,10 @@ class CartScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                 const Text(
+                const Text(
                   'Total',
                   style: TextStyle(fontSize: 20),
-                ),  
+                ),
                 Chip(
                   label: Text(
                     '\$${cart.cartTotalAmount}',
@@ -33,14 +33,7 @@ class CartScreen extends StatelessWidget {
                   ),
                   backgroundColor: Colors.white,
                 ),
-                ElevatedButton(
-                    onPressed: () {
-                      Provider.of<Orders>(context, listen: false)
-                          .addItem(cart.itemsList, cart.cartTotalAmount);
-                      cart.clear(); // Method defined in cart.dart to clear our cart items
-                    },
-                    child: Text('ORDER NOW',
-                        style: Theme.of(context).textTheme.bodyText1))
+                OrderButton(cart: cart)
               ],
             ),
           ),
@@ -64,5 +57,40 @@ class CartScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    Key? key,
+    required this.cart,
+  }) : super(key: key);
+
+  final Cart cart;
+
+  @override
+  State<OrderButton> createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+        onPressed: widget.cart.cartTotalAmount <= 0
+            ? null
+            : () async {
+              setState(() {
+                _isLoading = true;
+              });
+                await Provider.of<Orders>(context, listen: false).addItem(
+                    widget.cart.itemsList, widget.cart.cartTotalAmount);
+                widget.cart
+                    .clear(); // Method defined in cart.dart to clear our cart items
+                    setState(() {
+                      _isLoading = false;
+                    });
+              },
+        child: _isLoading ? const Center(child: CircularProgressIndicator(),) : Text('ORDER NOW', style: Theme.of(context).textTheme.bodyText1));
   }
 }
