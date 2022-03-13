@@ -24,20 +24,18 @@ class Orders with ChangeNotifier {
       /// same as the format Map<String, dynamic>
       /// though in dynamic map products key is List of dynamic(CartItem object) values
       ///
-      ///  {-My2AXI0raOqoGEKOBjK: {amount: 54.22, dateTime: 2022-03-13T17:38:31.895862, products: [{id: 2022-03-13 17:37:58.785862, price: 12.99, quantity: 1, title: Book}, {id: 2022-03-13 17:38:24.490091, price: 20.0, quantity: 2, title: Red Shirt}, {id: 2022-03-13 17:38:26.625944, price: 1.23, quantity: 1, title: Steel pen}]}}
+      // {-My2AXI0raOqoGEKOBjK: {amount: 54.22, dateTime: 2022-03-13T17:38:31.895862, products: [{id: 2022-03-13 17:37:58.785862, price: 12.99, quantity: 1, title: Book}, {id: 2022-03-13 17:38:24.490091, price: 20.0, quantity: 2, title: Red Shirt}, {id: 2022-03-13 17:38:26.625944, price: 1.23, quantity: 1, title: Steel pen}]}}
       final List<OrderItem> _loadedOrders = [];
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
       logger.d(extractedData);
       if (jsonDecode(response.body) == null) {
-        _orders = [];
-        notifyListeners();
         return;
       }
       extractedData.forEach((orderId, orderData) {
         _loadedOrders.add(OrderItem(
             id: orderId,
             amount: orderData['amount'],
-            dateTime: DateTime.parse(orderData['date']),
+            dateTime: DateTime.parse(orderData['dateTime']),
             products: (orderData['products']
                     as List<dynamic>) // its a list so run .map
                 .map((item) => Cartitem(
