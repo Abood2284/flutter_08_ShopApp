@@ -13,47 +13,62 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
-  var _isLoading = false;
-  @override
-  void initState() {
-    super.initState();
+  //future: needs type of future
+  late Future _obtainedEarlier;
 
-    /// You could also use didChangeDependencies this is also another workaround to get context
-    ///
-    /// This means that future will be called as soon as the build i finished and then run provider
-    /// Build -> Future(running for zero duration) -> then Provider called
-    Future.delayed(Duration.zero).then((_) async {
-      setState(() {
-        _isLoading = true;
-      });
-      try {
-        await Provider.of<Orders>(context, listen: false).fetchAndSetOrder();
-      } catch (e) {
-        print("ERROR HERE");
-        print(e);
-      }
-      setState(() {
-        _isLoading = false;
-      });
-    });
+  //to execute the provider function
+  Future _runFuture() async {
+    return await Provider.of<Orders>(context, listen: false).fetchAndSetOrder();
   }
 
   @override
+  void initState() {
+    //called the provider function before futurebuilder
+    _obtainedEarlier = _runFuture();
+    super.initState();
+  }
+
+  // Why using these many variable & methods just to initialize the Future.
+  // We could also directly use [Provider.of<Orders>(context, listen: false).fetchAndSetOrder()] in FutureBuilder though it will not have any problem in this app 
+  // Becuase build is not runnig again Resulting in re-creating of new Future but in your other app buil migh be called By any other state you manage and that will again trigger FutureBuilder to re run and create new Futures 
+  // ! and you dont want that
+  // * This is the Correct way to create a FutureBuilder 
+
+  @override
   Widget build(BuildContext context) {
-    final orderData = Provider.of<Orders>(context);
+    // This is will push our code in endless loop as Future will keep building and changing Orders and provider will listen to changes and rebuild the state again Future to the same becuase the state was re-build
+    // Solution -> Use consumer where you need it
+    // final orderData = Provider.of<Orders>(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ordered Item'),
-      ),
-      drawer: AppDrawer(),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(
-              itemCount: orderData.orders.length,
-              itemBuilder: (ctx, i) => OrderItem(orderData.orders[i]),
-            ),
-    );
+        appBar: AppBar(
+          title: const Text('Ordered Item'),
+        ),
+        drawer: AppDrawer(),
+        /// This the more optimized way of handling data instead of creating _isLoading variable and setState several times just to load a spiner this will load a spinner without even building build multiple times
+        /// 
+        /// [FutureBuilder] takes in future:[needs a future which is recomended that must be initated befote the FutureBuilder is called hence instantiate in initState], builder:[build the widget based on the sate of the connection, it returns context & current data snapshot(AsynccSnapshot)]
+        body: FutureBuilder(
+            future: _obtainedEarlier,
+            builder: (ctx, dataSnapshot) {
+              // Means we are still fetching data
+              if (dataSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else {
+                // We have an error
+                if (dataSnapshot.error != null) {
+                  return const Center(child: Text('Some error occured'));
+                } else {
+                  // Everything is fine data is Fetched and no error returned
+                  return Consumer<Orders>(
+                    builder: (_, orderData, _c) => ListView.builder(
+                      itemCount: orderData.orders.length,
+                      itemBuilder: (ctx, i) => OrderItem(orderData.orders[i]),
+                    ),
+                  ); 
+                }
+              }
+            }));
   }
 }
