@@ -10,6 +10,8 @@ import './providers/order_provider.dart';
 import './screens/orders_screen.dart';
 import './screens/user_products_screen.dart';
 import './screens/edit_product_screen.dart';
+import './screens/auth_screen.dart';
+import './providers/auth.dart';
 
 void main() => runApp(MyApp());
 
@@ -19,6 +21,9 @@ class MyApp extends StatelessWidget {
     // Thata how you can add mutiple providers without making code cumbersum
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          create: (ctx) => Auth(),
+        ),
         ChangeNotifierProvider(
           create: (ctx) =>
               Products(), // Setting up the provider in the root widget because we want access to ProductsOverviewScreen & ProductDetailScreen which are instantiated here
@@ -36,7 +41,7 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.deepOrange,
             accentColor: Colors.red,
             fontFamily: 'Lato'),
-        home: ProductsOverviewScreen(),
+        home: AuthScreen(),
         routes: {
           ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
           CartScreen.routeName: (ctx) => CartScreen(),
