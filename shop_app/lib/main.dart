@@ -35,20 +35,23 @@ class MyApp extends StatelessWidget {
           create: (ctx) => Orders(),
         ),
       ],
-      child: MaterialApp(
-        title: 'MyShop',
-        theme: ThemeData(
-            primarySwatch: Colors.deepOrange,
-            accentColor: Colors.red,
-            fontFamily: 'Lato'),
-        home: AuthScreen(),
-        routes: {
-          ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
-          CartScreen.routeName: (ctx) => CartScreen(),
-          OrdersScreen.routeName: (ctx) => OrdersScreen(),
-          UserProductScreen.routeName: (ctx) => UserProductScreen(),
-          EditProductScreen.routeName: (ctx) => EditProductScreen(),
-        },
+      child: Consumer<Auth>(
+        builder: ((context, auth, child) => MaterialApp(
+              title: 'MyShop',
+              theme: ThemeData(
+                  primarySwatch: Colors.deepOrange,
+                  accentColor: Colors.red,
+                  fontFamily: 'Lato'),
+                  /// * If isAuth returns true then user is authenticated and you can display the product screen
+              home: auth.isAuth ? ProductsOverviewScreen() : AuthScreen(),
+              routes: {
+                ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
+                CartScreen.routeName: (ctx) => CartScreen(),
+                OrdersScreen.routeName: (ctx) => OrdersScreen(),
+                UserProductScreen.routeName: (ctx) => UserProductScreen(),
+                EditProductScreen.routeName: (ctx) => EditProductScreen(),
+              },
+            )),
       ),
     );
   }

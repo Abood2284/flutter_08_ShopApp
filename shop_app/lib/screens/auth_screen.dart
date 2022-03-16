@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth.dart';
+import '../model/https_exception.dart';
 
 /// This will decide what UI rendered based on authMode whether user choose to login or signup
 ///
@@ -132,6 +133,27 @@ class _AuthCardState extends State<AuthCard> {
   /// * Used for holding the passowrd input and compare this with the [confirm password field] input in signup authMode
   final _passwordController = TextEditingController();
 
+  /// * To display the error dialog in try-catch block,
+  /// THough it is recommended that you create a seperate widget file for Showing Dialog and
+  /// then you can call that widget anywhere in the project to display beautiful dialogs.
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('An Error Occurred!'),
+        content: Text(message),
+        actions: <Widget>[
+          FlatButton(
+            child: Text('Okay'),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+          )
+        ],
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     /// Trigger and check validator if returned non null then invalid
     if (!_formKey.currentState!.validate()) {
@@ -146,15 +168,41 @@ class _AuthCardState extends State<AuthCard> {
     setState(() {
       _isLoading = true;
     });
+    try {
+      /// Check if the authmode === login mode
+      if (_authMode == AuthMode.Login) {
+        // Log user in
+        await Provider.of<Auth>(context, listen: false)
+            .login(_authData['email']!, _authData['password']!);
+      } else {
+        // Sign user up
+        await Provider.of<Auth>(context, listen: false)
+            .signup(_authData['email']!, _authData['password']!);
+      }
+    } on HttpException catch (error) {
+      var errorMessage = 'Authentication failed';
 
-    /// Check if the authmode === login mode
-    if (_authMode == AuthMode.Login) {
-      // Log user in
-    } else {
-      // Sign user up
-      await Provider.of<Auth>(context, listen: false)
-          .signup(_authData['email']!, _authData['password']!);
+      /// * These are some common error thrown by firebase,
+      /// Also this is no the recommended way to handle error you could do is create a widget that shows error dialog
+      /// and you can re-use it in multiple places where you want to show a error dialog
+      if (error.toString().contains('EMAIL_EXISTS')) {
+        errorMessage = 'This email address is already in use.';
+      } else if (error.toString().contains('INVALID_EMAIL')) {
+        errorMessage = 'This is not a valid email address';
+      } else if (error.toString().contains('WEAK_PASSWORD')) {
+        errorMessage = 'This password is too weak.';
+      } else if (error.toString().contains('EMAIL_NOT_FOUND')) {
+        errorMessage = 'Could not find a user with that email.';
+      } else if (error.toString().contains('INVALID_PASSWORD')) {
+        errorMessage = 'Invalid password.';
+      }
+      _showErrorDialog(errorMessage);
+    } catch (error) {
+      const errorMessage =
+          'Could not authenticate you. Please try again later.';
+      _showErrorDialog(errorMessage);
     }
+
     setState(() {
       _isLoading = false;
     });
