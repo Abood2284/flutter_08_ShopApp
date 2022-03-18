@@ -44,8 +44,9 @@ class Products with ChangeNotifier {
   ];
 
   String? _authToken;
+  String? userId;
 
-  Products(this._authToken, this._items);
+  Products(this._authToken, this.userId, this._items);
 
   List<Product> get items {
     return [..._items]; // This will return a copy of our list.
@@ -87,7 +88,6 @@ class Products with ChangeNotifier {
             'description': product.description,
             'price': product.price,
             'imageUrl': product.imageUrl,
-            'isFavorite': product.isFavorite,
           }));
 
       /// I will only run once the await block is completed is running
@@ -112,7 +112,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchProduct() async {
-    final url = Uri.parse(
+    // Will be overirdden
+    var url = Uri.parse(
         'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products.json?auth=$_authToken');
     try {
       final response = await http
@@ -123,6 +124,15 @@ class Products with ChangeNotifier {
       if (extractedData == null) {
         return;
       }
+      // Now i want to fetch fav for each user, so i am taking userFavorites.json
+      // and instead of taking favorite from prodData i take it from this url
+      /// * Now here userId will return only that userId for which the user is logged in becuase userId is only given to you when any user signsup or login
+      /// once a user login, a userID is set and here we now fetch the record of that user from is userId.
+      /// and set the the favorite status of that userId for that specific user every user have different userID so each will have different fav product status
+      url = Uri.parse(
+          'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/userFavorites/$userId.json?auth=$_authToken');
+      final favResponse = await http.get(url);
+      final decodedFavResponse = json.decode(favResponse.body); // returns a map of key value pair, where key = prodId and value true/false
       final List<Product> _loadedItems =
           []; // Creating empty list that will store loaded product and replace the original list with this later
 
@@ -150,12 +160,13 @@ class Products with ChangeNotifier {
 // also create new prdocut object for each map you run
       extractedData.forEach((prodId, prodData) {
         _loadedItems.add(Product(
-          id: prodId,
+          id: prodId, 
           title: prodData['title'] as String,
           description: prodData['description'],
           imageUrl: prodData['imageUrl'],
           price: prodData['price'],
-          isFavorite: prodData['isFavorite'],
+          // Instead of fetching favorites globally we are fecthing fav for each users
+          isFavorite: decodedFavResponse == null ? false : decodedFavResponse[prodId] ?? false,
         ));
       });
       // replace empty list with loaded list

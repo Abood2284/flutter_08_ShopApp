@@ -26,6 +26,10 @@ class Auth extends ChangeNotifier {
     return null;
   }
 
+  String? get userId {
+    return _userId;
+  }
+
   Future<void> signup(String email, String password) async {
     /// * Read this [https://firebase.google.com/docs/reference/rest/auth/] for more auth process
     final url = Uri.parse(
@@ -47,10 +51,11 @@ class Auth extends ChangeNotifier {
       /// * For more returned response you can check the official docs
       _token = responseData['idToken'];
       _userId = responseData['localId'];
-      _expiryTimeToken = DateTime.now()
-          .add(Duration(seconds: int.parse(responseData['expiresIn']))); // Firebase returns us a String of seconds in which it will expire
-          // That means from [current time] + [the seconds returned by firebase] = expireTime
-        notifyListeners();
+      _expiryTimeToken = DateTime.now().add(Duration(
+          seconds: int.parse(responseData[
+              'expiresIn']))); // Firebase returns us a String of seconds in which it will expire
+      // That means from [current time] + [the seconds returned by firebase] = expireTime
+      notifyListeners();
     } catch (error) {
       rethrow;
     }
@@ -73,11 +78,11 @@ class Auth extends ChangeNotifier {
       if (responseData['error'] != null) {
         throw HttpException(responseData['error']['message']);
       }
-       _token = responseData['idToken'];
+      _token = responseData['idToken'];
       _userId = responseData['localId'];
       _expiryTimeToken = DateTime.now()
           .add(Duration(seconds: int.parse(responseData['expiresIn'])));
-          notifyListeners();
+      notifyListeners();
     } catch (error) {
       rethrow;
     }

@@ -38,9 +38,9 @@ class MyApp extends StatelessWidget {
         /// ! More on this can be found in your notion book
         ChangeNotifierProxyProvider<Auth, Products>(
           create: (ctx) =>
-              Products(null, []), // Setting up the provider in the root widget because we want access to ProductsOverviewScreen & ProductDetailScreen which are instantiated here
+              Products(null, null, []), // Setting up the provider in the root widget because we want access to ProductsOverviewScreen & ProductDetailScreen which are instantiated here
               /// * We are providing this because we need, token in products.dart also we dont want to loose previous state that is why previous state _items is passed
-          update: (ctx, auth, previousProducts) =>  Products(auth.token!,
+          update: (ctx, auth, previousProducts) =>  Products(auth.token!, auth.userId,
      previousProducts == null ? [] : previousProducts.items),
         ),
         ChangeNotifierProvider(
