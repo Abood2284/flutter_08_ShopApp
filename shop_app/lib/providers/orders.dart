@@ -5,10 +5,13 @@ import 'package:http/http.dart' as http;
 
 import '../model/order.dart';
 import './cart.dart';
-import '../constants.dart';
+// import '../constants.dart';
 
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
+  late String? authToken;
+
+  Orders(this.authToken, this._orders);
 
   List<OrderItem> get orders {
     return [..._orders];
@@ -16,7 +19,7 @@ class Orders with ChangeNotifier {
 
   Future<void> fetchAndSetOrder() async {
     final url = Uri.parse(
-        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/orders.json');
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/orders.json?auth=$authToken');
     try {
       final response = await http.get(url);
       // print(json.decode(response.body));
@@ -56,7 +59,7 @@ class Orders with ChangeNotifier {
 
   Future<void> addItem(List<Cartitem> cartProducts, double total) async {
     final url = Uri.parse(
-        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/orders.json');
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/orders.json?auth=$authToken');
     final commonDateTime = DateTime.now();
     final response = await http.post(url,
         body: json.encode({

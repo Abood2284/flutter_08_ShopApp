@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../model/product.dart';
 import '../screens/product_details_screen.dart';
 import '../providers/cart.dart';
+import '../providers/auth.dart';
 
 class ProductSingleItem extends StatelessWidget {
   // final String id;
@@ -17,6 +18,7 @@ class ProductSingleItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final product = Provider.of<Product>(context, listen: false);
     final cart = Provider.of<Cart>(context, listen: false);
+    final authData = Provider.of<Auth>(context, listen: false); // Only to pass token to [product.toggleFavorite()]
     return ClipRRect(
       borderRadius: BorderRadius.circular(15),
       child: GridTile(
@@ -30,7 +32,7 @@ class ProductSingleItem extends StatelessWidget {
           backgroundColor: Colors.black87,
           leading: Consumer<Product>(
             builder: (ctx, product, _) => IconButton(
-              onPressed: () => product.toggleFavorite(),
+              onPressed: () => product.toggleFavorite(authData.token!),
               icon: Icon(
                 product.isFavorite ? Icons.favorite : Icons.favorite_border,
                 color: Theme.of(context).accentColor,

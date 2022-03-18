@@ -43,6 +43,10 @@ class Products with ChangeNotifier {
     // ),
   ];
 
+  String? _authToken;
+
+  Products(this._authToken, this._items);
+
   List<Product> get items {
     return [..._items]; // This will return a copy of our list.
     // ? Why we want copy and why the list is private
@@ -109,16 +113,16 @@ class Products with ChangeNotifier {
 
   Future<void> fetchProduct() async {
     final url = Uri.parse(
-        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products.json');
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products.json?auth=$_authToken');
     try {
       final response = await http
           .get(url); // wait the execution of below code till i am done
       // logger.d(json.decode(response.body));
       final extractedData = json.decode(response.body) as Map<String,
           dynamic>; // how i know? you can use logger to first print the decoded json value there you will see key as id and value is another map having key descrotion, title and value thier value which i added
-          if(extractedData == null) {
-            return;
-          }
+      if (extractedData == null) {
+        return;
+      }
       final List<Product> _loadedItems =
           []; // Creating empty list that will store loaded product and replace the original list with this later
 
@@ -147,7 +151,7 @@ class Products with ChangeNotifier {
       extractedData.forEach((prodId, prodData) {
         _loadedItems.add(Product(
           id: prodId,
-          title: prodData['title'],
+          title: prodData['title'] as String,
           description: prodData['description'],
           imageUrl: prodData['imageUrl'],
           price: prodData['price'],
@@ -169,7 +173,7 @@ class Products with ChangeNotifier {
     // Json allow us to dig deeper into project strucuture using /
     // SInce we need only single product and we also have the id of the product we can refer to it now
     final url = Uri.parse(
-        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products/$id.json');
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products/$id.json?auth=$_authToken');
     await http.patch(url,
         body: json.encode({
           'title': newProduct.title,
@@ -182,21 +186,21 @@ class Products with ChangeNotifier {
   }
 
 // * Deletes the item with the respected id
-/// LOGIC BEHIND DELETE PRODUCT
-/// 
-/// 1 - We store the product url to be deleted
-/// 2 - we store that product index in a variable 
-/// 3 - we store the product which is going to be deleted in a variable
-/// 4 - we remove the product from the list not the database
-/// 5 - we send request to db to delete prodcut waiting for response
-/// 6 - if response code is greater than 400 then we know its an error and we make into if block
-/// 7 - recovering the deleted product by again inserting the product back at the same index using the variable we created to store index and product
-/// 8 - we throw error if we made into if block which is handled in user_products_screen
-/// 
-/// 9 - if we make out of if block the variable holding the product will be null so there will no chance to recover hence making the db response success
+  /// LOGIC BEHIND DELETE PRODUCT
+  ///
+  /// 1 - We store the product url to be deleted
+  /// 2 - we store that product index in a variable
+  /// 3 - we store the product which is going to be deleted in a variable
+  /// 4 - we remove the product from the list not the database
+  /// 5 - we send request to db to delete prodcut waiting for response
+  /// 6 - if response code is greater than 400 then we know its an error and we make into if block
+  /// 7 - recovering the deleted product by again inserting the product back at the same index using the variable we created to store index and product
+  /// 8 - we throw error if we made into if block which is handled in user_products_screen
+  ///
+  /// 9 - if we make out of if block the variable holding the product will be null so there will no chance to recover hence making the db response success
   Future<void> deleteItem(String id) async {
     final url = Uri.parse(
-        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products/$id.json');
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products/$id.json?auth=$_authToken');
     final existingProductIndex =
         _items.indexWhere((element) => element.id == id);
     Product? existingProduct = _items[existingProductIndex];
