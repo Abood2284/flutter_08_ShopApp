@@ -88,6 +88,7 @@ class Products with ChangeNotifier {
             'description': product.description,
             'price': product.price,
             'imageUrl': product.imageUrl,
+            'creatorId': userId,
           }));
 
       /// I will only run once the await block is completed is running
@@ -111,10 +112,20 @@ class Products with ChangeNotifier {
     }
   }
 
-  Future<void> fetchProduct() async {
+// adding optional parameter to make it flexible
+  Future<void> fetchProduct([bool filterBy = false]) async {
+    // Becuase in homepage i dont want to filter products and just want to show all products i only want to filter products in edit_product_screen where i will pass this method bool true
+    final filterString =
+        filterBy ? '&orderBy="creatorId"&equalTo="$userId"' : '';
     // Will be overirdden
+    ///* Now also lets fetch products only mathcing the logged in userId, now instead of doing th filter here on your codebase
+    ///* you should do that on the server side, for that firebase supprts filtering
+    ///* For that you need a string at the end of your _authToken => &orderBy="creatorId"&equalTo="$userId"
+    ///
+    ///here you are saying firebase you want to filter by creatorId where it is equal to userId
+    ///! you also need to change something on firebase side inside rules, you need to configure the index to help firebase interact with the db & support such filtering
     var url = Uri.parse(
-        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products.json?auth=$_authToken');
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/products.json?auth=$_authToken$filterString');
     try {
       final response = await http
           .get(url); // wait the execution of below code till i am done
@@ -132,7 +143,8 @@ class Products with ChangeNotifier {
       url = Uri.parse(
           'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/userFavorites/$userId.json?auth=$_authToken');
       final favResponse = await http.get(url);
-      final decodedFavResponse = json.decode(favResponse.body); // returns a map of key value pair, where key = prodId and value true/false
+      final decodedFavResponse = json.decode(favResponse
+          .body); // returns a map of key value pair, where key = prodId and value true/false
       final List<Product> _loadedItems =
           []; // Creating empty list that will store loaded product and replace the original list with this later
 
@@ -160,13 +172,15 @@ class Products with ChangeNotifier {
 // also create new prdocut object for each map you run
       extractedData.forEach((prodId, prodData) {
         _loadedItems.add(Product(
-          id: prodId, 
+          id: prodId,
           title: prodData['title'] as String,
           description: prodData['description'],
           imageUrl: prodData['imageUrl'],
           price: prodData['price'],
           // Instead of fetching favorites globally we are fecthing fav for each users
-          isFavorite: decodedFavResponse == null ? false : decodedFavResponse[prodId] ?? false,
+          isFavorite: decodedFavResponse == null
+              ? false
+              : decodedFavResponse[prodId] ?? false,
         ));
       });
       // replace empty list with loaded list
