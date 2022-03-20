@@ -1,3 +1,4 @@
+// how should a item look like in a cart
 import 'package:flutter/material.dart';
 
 class Cartitem {

@@ -1,10 +1,11 @@
+// Basic model of each product will look like in OrdersScreen
 import '../providers/cart.dart';
 
 class OrderItem {
-  final String id;
-  final double amount;
-  final List<Cartitem> products;
-  final DateTime dateTime;
+  final String id; // Should have id
+  final double amount; // Should display the amount you spent in total
+  final List<Cartitem> products; // should display the products you purchased
+  final DateTime dateTime; // Should show the time you made the order
 
   OrderItem(
       {required this.id,

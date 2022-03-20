@@ -1,3 +1,4 @@
+// Shows how each product should look like & have some important methods to toggle favorite
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -45,6 +46,8 @@ class Product with ChangeNotifier {
     }
   }
 
+// Can be used to override the existing Product object wiht new one
+// Used in edit_product_screen to overide empty Product object with entered user value
   Product copyWith({
     String? id,
     String? title,

@@ -24,3 +24,10 @@
 - Learned how to encode & decode json code
 
 # SECTION - 11 - USER - AUTHENTICATION
+- Thoro look authentication
+- how to login & signup a user
+- How to send authentication requests and manage user with token
+- Learned how to manage the token & pass it to other screens using proxyProvider
+- learned how to filter products & favorites with userId
+- Learned how to handle the session of the user, with autoLogin & token expiring
+- Also in main.dart we rendered different UI based on user authenticaion

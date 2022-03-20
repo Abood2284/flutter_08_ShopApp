@@ -1,3 +1,4 @@
+// Used to handle and throw custom exceptions such as in auth_screen.dart
 class HttpException implements Exception {
   final String message;
 

@@ -5,21 +5,26 @@ import 'package:http/http.dart' as http;
 
 import '../model/order.dart';
 import './cart.dart';
-// import '../constants.dart';
+import '../constants.dart';
+import '../model/https_exception.dart';
 
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
   late String? authToken;
+  // Scoping every has his own orders -> logic in the url
+  String? userId;
 
-  Orders(this.authToken, this._orders);
+  Orders(this.authToken, this.userId, this._orders);
 
   List<OrderItem> get orders {
     return [..._orders];
   }
 
   Future<void> fetchAndSetOrder() async {
+    // Also now fetching full orders we will fetch inside orders orders for the userId
+    // ! also add the same logic while adding the order
     final url = Uri.parse(
-        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/orders.json?auth=$authToken');
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/orders/$userId.json?auth=$authToken');
     try {
       final response = await http.get(url);
       // print(json.decode(response.body));
@@ -29,11 +34,14 @@ class Orders with ChangeNotifier {
       ///
       // {-My2AXI0raOqoGEKOBjK: {amount: 54.22, dateTime: 2022-03-13T17:38:31.895862, products: [{id: 2022-03-13 17:37:58.785862, price: 12.99, quantity: 1, title: Book}, {id: 2022-03-13 17:38:24.490091, price: 20.0, quantity: 2, title: Red Shirt}, {id: 2022-03-13 17:38:26.625944, price: 1.23, quantity: 1, title: Steel pen}]}}
       final List<OrderItem> _loadedOrders = [];
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      // logger.d(extractedData);
+      logger.d('here 0');
       if (jsonDecode(response.body) == null) {
-        return;
+        logger.d('Exception thrown');
+        throw HttpException('No orders Found');
       }
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      logger.d('here');
+      logger.d(extractedData);
       extractedData.forEach((orderId, orderData) {
         _loadedOrders.add(OrderItem(
             id: orderId,
@@ -59,7 +67,7 @@ class Orders with ChangeNotifier {
 
   Future<void> addItem(List<Cartitem> cartProducts, double total) async {
     final url = Uri.parse(
-        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/orders.json?auth=$authToken');
+        'https://flutter-08-shopapp-udemy-default-rtdb.firebaseio.com/orders/$userId.json?auth=$authToken');
     final commonDateTime = DateTime.now();
     final response = await http.post(url,
         body: json.encode({
