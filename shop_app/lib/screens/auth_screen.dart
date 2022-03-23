@@ -13,6 +13,7 @@ import '../model/https_exception.dart';
 /// else if user choose signup we ask user to enter pass twice to confirm wile rendering container with height 320
 enum AuthMode { Signup, Login }
 
+/// * Is responsible for backgroundColor, Location of the authCard, MyShop Text
 class AuthScreen extends StatelessWidget {
   static const routeName = 'auth-screen';
 
@@ -105,6 +106,7 @@ class AuthScreen extends StatelessWidget {
   }
 }
 
+/// * Returns a Card which holds the logic and UI for user to signup & login
 class AuthCard extends StatefulWidget {
   const AuthCard({
     Key? key,
@@ -114,7 +116,8 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   /// To manage the state of the form from the state
   final GlobalKey<FormState> _formKey = GlobalKey();
 
@@ -133,6 +136,45 @@ class _AuthCardState extends State<AuthCard> {
   /// * Used for holding the passowrd input and compare this with the [confirm password field] input in signup authMode
   final _passwordController = TextEditingController();
 
+  /// * Variable _controller of type Animation controller
+  late AnimationController _controller;
+
+  /// * Controller is other thing i also need a animation, which is generic type.
+  /// * As here i want to animate height/size of the Container(Holding auth UI which changes it size to 360 when user press signup and shrinks back to 260 when user press login)
+  late Animation<Size> _heightAnimation;
+
+  // Both Animation variable should be assigned when the state is created
+  @override
+  void initState() {
+    /// * vsync: we need to pass a pointer to the widget that needs animation and when that widget is visisble on the screen then only the animation should run.
+    /// * So i want to point to this widget or state which belongs to the widget which has build method
+    /// ! Also you need to add (with SingleTickerProviderStateMixin) to your state class
+    /// * Duration shouldnt be too long we just need to show user a small animation
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+
+    /// * Now for Animation, animation is setup using tween class which in the end knows how to animate between 2 values (between same as tween).
+    /// * Also type of generic so passing it Size, Size needs widht & height same does the end needs,  this means start with height 260 end with 360,
+    /// ! and vice-versa as you didnt mention the duration(reverse or just duration), if you dont configure reverse diration then both duration will be configured the same for you as here both 300milliseconds
+    _heightAnimation = Tween<Size>(
+            begin: const Size(double.infinity, 250),
+            end: const Size(double.infinity, 320))
+        .animate(CurvedAnimation(
+            parent: _controller,
+            curve: Curves.fastOutSlowIn)); // See more animations with Curves.
+    /// * Adding a listener to call setState when ever _heightAnimation changes
+    // _heightAnimation.addListener(() {
+    //   setState(() {});
+    // });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   /// * To display the error dialog in try-catch block,
   /// THough it is recommended that you create a seperate widget file for Showing Dialog and
   /// then you can call that widget anywhere in the project to display beautiful dialogs.
@@ -140,11 +182,11 @@ class _AuthCardState extends State<AuthCard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('An Error Occurred!'),
+        title: const Text('An Error Occurred!'),
         content: Text(message),
         actions: <Widget>[
           FlatButton(
-            child: Text('Okay'),
+            child: const Text('Okay'),
             onPressed: () {
               Navigator.of(ctx).pop();
             },
@@ -215,10 +257,14 @@ class _AuthCardState extends State<AuthCard> {
       setState(() {
         _authMode = AuthMode.Signup;
       });
+      _controller
+          .forward(); // Starts the animation & you want to enlarge the container when going to Signup mode.
     } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
+      _controller
+          .reverse(); // reverse the animation making the container shrink, which you want when going to login mode
     }
   }
 
@@ -230,16 +276,21 @@ class _AuthCardState extends State<AuthCard> {
         borderRadius: BorderRadius.circular(10.0),
       ),
       elevation: 8.0,
-      child: Container(
-        /// Render the height based on the authMode as Signup needs more height to diaplay confirm password Field
-        height: _authMode == AuthMode.Signup ? 320 : 260,
-        constraints:
-            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
-        width: deviceSize.width * 0.75,
-        padding: const EdgeInsets.all(16.0),
 
-        /// ! FORM
-        child: Form(
+      /// ! MOre on Notion
+      /// ! Switched from AnimatedBuilder -> AnimatedContainer
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubicEmphasized,
+          /// Render the height based on the authMode as Signup needs more height to display confirm password Field
+          height: _authMode == AuthMode.Signup ? 320 : 260,
+          // height: _heightAnimation.value.height,
+          constraints: BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
+          width: deviceSize.width * 0.75,
+          padding: const EdgeInsets.all(16.0),
+
+          /// ! FORM
+          child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
