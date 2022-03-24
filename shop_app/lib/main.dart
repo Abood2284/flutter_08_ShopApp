@@ -61,11 +61,13 @@ class MyApp extends StatelessWidget {
           // To avoid code duplication now you can check this on every screen that is auth true then allow
           ifAuth(targetScreen) => auth.isAuth ? targetScreen : AuthScreen();
           return MaterialApp(
+            // showPerformanceOverlay: true,
             title: 'MyShop',
             theme: ThemeData(
-                primarySwatch: Colors.deepOrange,
-                accentColor: Colors.red,
-                fontFamily: 'Lato'),
+                fontFamily: 'Lato',
+                colorScheme:
+                    ColorScheme.fromSwatch(primarySwatch: Colors.deepOrange)
+                        .copyWith(secondary: Colors.red)),
 
             /// * If isAuth returns true then user is authenticated and you can display the product screen
             /// * if not authenticated then try autoLogin

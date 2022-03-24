@@ -18,24 +18,36 @@ class ProductSingleItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final product = Provider.of<Product>(context, listen: false);
     final cart = Provider.of<Cart>(context, listen: false);
-    final authData = Provider.of<Auth>(context, listen: false); // Only to pass token to [product.toggleFavorite()]
+    final authData = Provider.of<Auth>(context,
+        listen: false); // Only to pass token to [product.toggleFavorite()]
     return ClipRRect(
       borderRadius: BorderRadius.circular(15),
       child: GridTile(
         child: GestureDetector(
-            onTap: () {
-              Navigator.of(context).pushNamed(ProductDetailScreen.routeName,
-                  arguments: product.id);
-            },
-            child: Image.network(product.imageUrl, fit: BoxFit.cover)),
+          onTap: () {
+            Navigator.of(context).pushNamed(ProductDetailScreen.routeName,
+                arguments: product.id);
+          },
+
+          /// * Adds a FadeInImage Animation Does all the FadeIn Animation heavyLifting, you just have to provide the placeholder: image to be loaded before the original img is downloaded, image: image to be shown with animation.
+          child: Hero(
+            tag: product.id!,
+            child: FadeInImage(
+                placeholder:
+                    const AssetImage('assets/images/product-placeholder.png'),
+                image: NetworkImage(product.imageUrl),
+                fit: BoxFit.cover),
+          ),
+        ),
         footer: GridTileBar(
           backgroundColor: Colors.black87,
           leading: Consumer<Product>(
             builder: (ctx, product, _) => IconButton(
-              onPressed: () => product.toggleFavorite(authData.token!, authData.userId!),
+              onPressed: () =>
+                  product.toggleFavorite(authData.token!, authData.userId!),
               icon: Icon(
                 product.isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: Theme.of(context).accentColor,
+                color: Theme.of(context).colorScheme.secondary,
               ),
             ),
           ),
@@ -60,7 +72,7 @@ class ProductSingleItem extends StatelessWidget {
                 ));
               },
               icon: Icon(Icons.shopping_cart,
-                  color: Theme.of(context).accentColor)),
+                  color: Theme.of(context).colorScheme.secondary)),
         ),
       ),
     );

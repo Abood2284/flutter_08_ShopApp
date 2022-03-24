@@ -33,16 +33,20 @@ class _OrderItemState extends State<OrderItem> {
                   _expanded = !_expanded;
                 });
               },
-              icon:
-                  _expanded ? Icon(Icons.expand_less) : Icon(Icons.expand_more),
+              icon: _expanded
+                  ? const Icon(Icons.expand_less)
+                  : const Icon(Icons.expand_more),
             ),
           ),
-          if (_expanded)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
+          // if (_expanded) // Bcoz we are using animated container and ternary expression in height
+          // Show the animation on the container, that exapnds when the icon is pressedlk
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
 
               /// * This will take lesser of the 2 height
-              height: min(widget.order.products.length * 20 + 10, 100),
+              height: _expanded ? min(widget.order.products.length * 20 + 10, 100) : 0, // Bcoz this container should not be visisble if we are not expanded
               child: ListView.builder(
                 itemCount: widget.order.products.length,
                 itemBuilder: (ctx, i) => Row(
@@ -50,7 +54,7 @@ class _OrderItemState extends State<OrderItem> {
                   children: [
                     Text(
                       widget.order.products[i].title,
-                      style: TextStyle(fontSize: 17),
+                      style: const TextStyle(fontSize: 17),
                     ),
                     Row(
                       children: [

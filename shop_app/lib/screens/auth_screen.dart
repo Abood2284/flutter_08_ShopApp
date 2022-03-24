@@ -141,8 +141,11 @@ class _AuthCardState extends State<AuthCard>
 
   /// * Controller is other thing i also need a animation, which is generic type.
   /// * As here i want to animate height/size of the Container(Holding auth UI which changes it size to 360 when user press signup and shrinks back to 260 when user press login)
-  late Animation<Size> _heightAnimation;
+  late Animation<Size> _heightAnimation; // Unused Code
 
+  late Animation<double> _opacity;
+
+  /// used by {FadeTransition}
   // Both Animation variable should be assigned when the state is created
   @override
   void initState() {
@@ -166,6 +169,9 @@ class _AuthCardState extends State<AuthCard>
     // _heightAnimation.addListener(() {
     //   setState(() {});
     // });
+
+    /// This opacitate from 0 (form invisible) to 1(fully visible) -> opacity can have value between 0 & 1
+    _opacity = Tween(begin: 0.0, end: 1.0).animate(_controller);
     super.initState();
   }
 
@@ -282,15 +288,17 @@ class _AuthCardState extends State<AuthCard>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOutCubicEmphasized,
-          /// Render the height based on the authMode as Signup needs more height to display confirm password Field
-          height: _authMode == AuthMode.Signup ? 320 : 260,
-          // height: _heightAnimation.value.height,
-          constraints: BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
-          width: deviceSize.width * 0.75,
-          padding: const EdgeInsets.all(16.0),
 
-          /// ! FORM
-          child: Form(
+        /// Render the height based on the authMode as Signup needs more height to display confirm password Field
+        height: _authMode == AuthMode.Signup ? 320 : 260,
+        // height: _heightAnimation.value.height,
+        constraints:
+            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
+        width: deviceSize.width * 0.75,
+        padding: const EdgeInsets.all(16.0),
+
+        /// ! FORM
+        child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
@@ -328,25 +336,37 @@ class _AuthCardState extends State<AuthCard>
                 ),
 
                 /// * Only if AuthMode is signup then show the confirm password field
-                if (_authMode == AuthMode.Signup)
-                  TextFormField(
-                    ///? Still dont know that is the use of enabled: here
-                    enabled: _authMode == AuthMode.Signup,
-                    decoration:
-                        const InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-
-                    /// * Just a basic validator again checks if we are in signup Mode and compared value with the password controller if not the same then return error else null
-                    validator: _authMode == AuthMode.Signup
-                        ? (value) {
-                            if (value != _passwordController.text) {
-                              //! ...Not a valid error handling
-                              return 'Passwords do not match!';
-                            }
-                            return null;
-                          }
-                        : null,
+                // if (_authMode == AuthMode.Signup)
+                /// * Instead of if check we are using AnimatedContainer to prevent the reserved size for the ConfirmPass field as without if check it is permenant field,
+                /// If we add if Check we will not be able to see the FadeTransition as it will be soo quick
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  constraints: BoxConstraints(
+                    minHeight: _authMode == AuthMode.Signup ? 60 : 0,
+                    maxHeight: _authMode == AuthMode.Signup ? 120 : 0,
                   ),
+                  child: FadeTransition(
+                    opacity: _opacity,
+                    child: TextFormField(
+                      ///? Still dont know that is the use of enabled: here
+                      enabled: _authMode == AuthMode.Signup,
+                      decoration:
+                          const InputDecoration(labelText: 'Confirm Password'),
+                      obscureText: true,
+
+                      /// * Just a basic validator again checks if we are in signup Mode and compared value with the password controller if not the same then return error else null
+                      validator: _authMode == AuthMode.Signup
+                          ? (value) {
+                              if (value != _passwordController.text) {
+                                //! ...Not a valid error handling
+                                return 'Passwords do not match!';
+                              }
+                              return null;
+                            }
+                          : null,
+                    ),
+                  ),
+                ),
                 const SizedBox(
                   height: 20,
                 ),

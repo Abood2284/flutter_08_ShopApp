@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../model/order.dart';
 import './cart.dart';
-import '../constants.dart';
+// import '../constants.dart';
 import '../model/https_exception.dart';
 
 class Orders with ChangeNotifier {
@@ -34,14 +34,14 @@ class Orders with ChangeNotifier {
       ///
       // {-My2AXI0raOqoGEKOBjK: {amount: 54.22, dateTime: 2022-03-13T17:38:31.895862, products: [{id: 2022-03-13 17:37:58.785862, price: 12.99, quantity: 1, title: Book}, {id: 2022-03-13 17:38:24.490091, price: 20.0, quantity: 2, title: Red Shirt}, {id: 2022-03-13 17:38:26.625944, price: 1.23, quantity: 1, title: Steel pen}]}}
       final List<OrderItem> _loadedOrders = [];
-      logger.d('here 0');
+      // logger.d('here 0');
       if (jsonDecode(response.body) == null) {
-        logger.d('Exception thrown');
+        // logger.d('Exception thrown');
         throw HttpException('No orders Found');
       }
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      logger.d('here');
-      logger.d(extractedData);
+      // logger.d('here');
+      // logger.d(extractedData);
       extractedData.forEach((orderId, orderData) {
         _loadedOrders.add(OrderItem(
             id: orderId,

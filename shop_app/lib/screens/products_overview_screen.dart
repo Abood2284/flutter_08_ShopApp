@@ -7,6 +7,7 @@ import '../providers/cart.dart';
 import '../screens/cart_screen.dart';
 import '../widgets/drawer.dart';
 import '../providers/products.dart';
+import '../constants.dart';
 
 /// * Because we as developers we want to work with string and computer wants int so 😃
 enum FilterOptions {
@@ -40,6 +41,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
       });
       // I am using .then here bcoz using async and await is not recommended bcoz this would change the return value of the method hence this method should not be overriden as it is important for flutter
       Provider.of<Products>(context).fetchProduct().then((_) {
+        logger.d('Product Fetched');
         setState(() {
           _isLoading = false;
         });

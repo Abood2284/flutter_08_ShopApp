@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../constants.dart';
 import '../model/https_exception.dart';
 
 class Auth extends ChangeNotifier {
@@ -121,6 +120,7 @@ class Auth extends ChangeNotifier {
     final extractedData =
         json.decode(prefs.getString('userData')!) as Map<String, dynamic>;
     final extractedDate = DateTime.parse(extractedData['expiryTime']);
+    // logger.d(extractedData);
 
 // If true we know that the token is expired
     if (extractedDate.isBefore(DateTime.now())) {
@@ -134,7 +134,7 @@ class Auth extends ChangeNotifier {
     return true;
   }
 
-  void logout() {
+  Future<void> logout() async {
     _userId = null;
     _token = null;
     _expiryTimeToken = null;
@@ -143,6 +143,9 @@ class Auth extends ChangeNotifier {
       _authTimer = null;
     }
     notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    // prefs.remove('userData'); // Will clear only the preference which matches the pass key, incase you want to clear only selected preferences, not all
+    prefs.clear(); // Will clear all the data stored with key
   }
 
   void _autoLogout() {
