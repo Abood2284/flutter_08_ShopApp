@@ -46,3 +46,10 @@
 - Learned about many Animations, build-in animations
 - How to create Animations manually
 - Learned about AnimatedContainer, Hero, CustomRouteTransition(helps to create animation for route transitioning)
+
+
+## FINAL PRODUCT/APP
+<image src ="images/1_08.png" width="200" height="400"> <image src ="images/2_08.png" width="200" height="400">
+  <image src ="images/3_08.png" width="200" height="400"> <image src ="images/4_08.png" width="200" height="400">
+    <image src ="images/5_08.png" width="200" height="400"> <image src ="images/6_08.png" width="200" height="400">
+      <image src ="images/7_08.png" width="200" height="400">
